@@ -163,7 +163,6 @@ module Brightcove
             
       url = URI.parse(@write_api_url)
       response = nil
-      pp file
       payload[:json] = body.to_json
       payload[:file] = file.read #file.is_a?(UploadIO) ? file : UploadIO.new(file, content_type)
       
