@@ -4,6 +4,7 @@ require 'rest-client'
 require 'orderedhash'
 require 'net/http/post/multipart'
 require 'brightcove-api/version'
+require "open-uri"
 
 module Brightcove
   class API
@@ -135,7 +136,8 @@ module Brightcove
     # @param upload_file [String] Full path of file to be uploaded.
     # @param parameters [Hash] Optional hash containing parameter names and values.
     def post_file_streaming(api_method, upload_file, content_type, parameters)
-      File.open(upload_file) { |file| post_io_streaming(api_method, file, content_type, parameters) }
+      open(upload_file) { |file| post_io_streaming(api_method, file, content_type, parameters) }
+      # File.open(upload_file) { |file| post_io_streaming(api_method, file, content_type, parameters) }
     end
     
     # Post a file IO object via HTTP streaming to the Brightcove API, e.g. uploading video. 
@@ -162,7 +164,7 @@ module Brightcove
       response = nil
       
       payload[:json] = body.to_json
-      payload[:file] = file.is_a?(UploadIO) ? file : UploadIO.new(file, content_type)
+      payload[:file] = file.read #file.is_a?(UploadIO) ? file : UploadIO.new(file, content_type)
       
       request = Net::HTTP::Post::Multipart.new(url.path, payload)
       
