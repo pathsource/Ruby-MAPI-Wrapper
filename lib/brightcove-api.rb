@@ -4,7 +4,6 @@ require 'rest-client'
 require 'orderedhash'
 require 'net/http/post/multipart'
 require 'brightcove-api/version'
-require "open-uri"
 
 module Brightcove
   class API
@@ -90,6 +89,40 @@ module Brightcove
       self.class.post(@write_api_url, {:body => {:json => JSON.generate(body)}})
     end
 
+    def post_remote_file(api_method, parameters = {})
+      parameters.merge!({"token" => @token})
+
+      body = {}
+      body.merge!({:method => api_method})
+      body.merge!({:params => parameters})
+
+      # Brightcove requires that the JSON-RPC call absolutely
+      # be the first part of a multi-part POST like create_video.
+      if RUBY_VERSION >= '1.9'
+        payload = {}
+      else
+        payload = OrderedHash.new
+      end
+
+      payload[:json] = body.to_json
+      
+      execution_payload = {
+        :method => :post,
+        :url => @write_api_url,
+        :payload => payload,
+        :content_type => :json,
+        :accept => :json,
+        :multipart => true        
+      }
+      
+      execution_payload[:timeout] = @timeout if @timeout
+      execution_payload[:open_timeout] = @open_timeout if @open_timeout
+
+      response = RestClient::Request.execute(execution_payload)
+
+      JSON.parse(response)
+    end
+
     # Post a file to the Brightcove API, e.g. uploading video. 
     #
     # @param api_method [String] Brightcove API method.
@@ -136,9 +169,7 @@ module Brightcove
     # @param upload_file [String] Full path of file to be uploaded.
     # @param parameters [Hash] Optional hash containing parameter names and values.
     def post_file_streaming(api_method, upload_file, content_type, parameters)
-      pp upload_file
-      open(upload_file) { |file| post_io_streaming(api_method, file, content_type, parameters) }
-      # File.open(upload_file) { |file| post_io_streaming(api_method, file, content_type, parameters) }
+      File.open(upload_file) { |file| post_io_streaming(api_method, file, content_type, parameters) }
     end
     
     # Post a file IO object via HTTP streaming to the Brightcove API, e.g. uploading video. 
@@ -164,7 +195,7 @@ module Brightcove
       url = URI.parse(@write_api_url)
       response = nil
       payload[:json] = body.to_json
-      payload[:file] = file.read #file.is_a?(UploadIO) ? file : UploadIO.new(file, content_type)
+      payload[:file] = file.is_a?(UploadIO) ? file : UploadIO.new(file, content_type)
       
       request = Net::HTTP::Post::Multipart.new(url.path, payload)
       
