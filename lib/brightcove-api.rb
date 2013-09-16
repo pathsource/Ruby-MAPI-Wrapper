@@ -177,7 +177,7 @@ module Brightcove
     # @param api_method [String] Brightcove API method.
     # @param file [File handle] File handle of file to be uploaded.
     # @param parameters [Hash] Optional hash containing parameter names and values.
-    def post_io_streaming(api_method, content_type, parameters)
+    def post_io_streaming(api_method, parameters)
       parameters.merge!({"token" => @token})
 
       body = {}
