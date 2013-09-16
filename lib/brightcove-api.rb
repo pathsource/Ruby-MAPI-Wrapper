@@ -177,7 +177,7 @@ module Brightcove
     # @param api_method [String] Brightcove API method.
     # @param file [File handle] File handle of file to be uploaded.
     # @param parameters [Hash] Optional hash containing parameter names and values.
-    def post_io_streaming(api_method, parameters)
+    def post_io_streaming(api_method, file, content_type, parameters)
       parameters.merge!({"token" => @token})
 
       body = {}
@@ -195,7 +195,7 @@ module Brightcove
       url = URI.parse(@write_api_url)
       response = nil
       payload[:json] = body.to_json
-      # payload[:file] = file.is_a?(UploadIO) ? file : UploadIO.new(file, content_type)
+      payload[:file] = file.is_a?(UploadIO) ? file : UploadIO.new(file, content_type)
       
       request = Net::HTTP::Post::Multipart.new(url.path, payload)
       
