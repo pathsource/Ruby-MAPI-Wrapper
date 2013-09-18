@@ -144,7 +144,7 @@ module Brightcove
       end
 
       payload[:json] = body.to_json
-      payload[:file] = File.new(file, 'rb')
+      payload[:file] = file #File.new(file, 'rb')
       
       execution_payload = {
         :method => :post,
